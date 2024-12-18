@@ -1,29 +1,104 @@
-apiVersion: v1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: my-app
-  namespace: default
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+    openshift.io/scc: restricted
+  creationTimestamp: "2024-12-18T12:00:00Z"
+  generation: 1
   labels:
-    app: my-app
+    app: example-app
+  managedFields:
+    - apiVersion: apps/v1
+      fieldsType: FieldsV1
+      fieldsV1:
+        f:metadata:
+          f:labels:
+            .: {}
+            f:app: {}
+        f:spec:
+          f:replicas: {}
+          f:selector: {}
+          f:template:
+            f:metadata:
+              f:labels:
+                .: {}
+                f:app: {}
+            f:spec:
+              f:containers:
+                .: {}
+                k:{"name":"example-container"}:
+                  .: {}
+                  f:image: {}
+                  f:name: {}
+                  f:ports: {}
+                  f:resources: {}
+      manager: openshift-controller-manager
+      operation: Update
+      time: "2024-12-18T12:00:01Z"
+  name: example-deployment
+  namespace: example-namespace
+  resourceVersion: "123456"
+  selfLink: /apis/apps/v1/namespaces/example-namespace/deployments/example-deployment
+  uid: 123e4567-e89b-12d3-a456-426614174000
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: my-app
+      app: example-app
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
   template:
     metadata:
       labels:
-        app: my-app1
+        app: example-app
     spec:
       containers:
-        - name: nginx-container1
+        - name: example-container
           image: nginx:1.21.0
           ports:
             - containerPort: 80
           env:
             - name: ENV
               value: production
-            - test: TEST
-              value: true
-            - test: TEST1
-              value: true
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+status:
+  availableReplicas: 3
+  conditions:
+    - type: Available
+      status: "True"
+      lastUpdateTime: "2024-12-18T12:00:02Z"
+      lastTransitionTime: "2024-12-18T12:00:02Z"
+      reason: MinimumReplicasAvailable
+      message: Deployment has minimum availability.
+    - type: Progressing
+      status: "True"
+      lastUpdateTime: "2024-12-18T12:00:01Z"
+      lastTransitionTime: "2024-12-18T12:00:01Z"
+      reason: NewReplicaSetAvailable
+      message: ReplicaSet \"example-deployment-abc123\" has successfully progressed.
+  observedGeneration: 1
+  readyReplicas: 3
+  replicas: 3
+  updatedReplicas: 3
